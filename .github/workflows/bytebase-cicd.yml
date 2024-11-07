@@ -5,7 +5,7 @@ on:
     branches:
       - main
 jobs:
-  bytebase-check-migration-status:
+  bytebase-cicd:
     runs-on: ubuntu-latest
     env:
       BYTEBASE_URL: "https://bytebase-ci.zeabur.app"
