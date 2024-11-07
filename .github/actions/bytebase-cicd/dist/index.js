@@ -32446,10 +32446,10 @@ async function run() {
         //   throw new Error('expect pull request was merged')
         // }
         core.info(process.env.GITHUB_WORKSPACE ?? 'not found');
-        const globber = await glob.create('*.sql');
+        const globber = await glob.create('./migrations/*.sql');
         for await (const file of globber.globGenerator()) {
             core.info(file);
-            const content = await fs.readFile(file);
+            const content = await fs.readFile(file, { encoding: 'utf8' });
             core.info(content.toString());
         }
         const commit = prPayload.pull_request.merge_commit_sha;
