@@ -1,6 +1,6 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'bytebase release api sample'
+description: 'Use Bytebase API to create releases and update databases'
+author: 'p0ny'
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
@@ -9,9 +9,17 @@ branding:
 
 # Define your inputs here.
 inputs:
+  bb-url:
+    description: 'The Bytebase URL. Example: https://bytebase.example.com'
+    required: true
+  bb-token:
+    description: 'The Bytebase access token'
+    required: true
+  gh-token:
+    description: 'The github access token'
+    required: true
   milliseconds:
     description: 'Your input description here'
-    required: true
     default: '1000'
 
 # Define your outputs here.
