@@ -32432,16 +32432,18 @@ const github = __importStar(__nccwpck_require__(3802));
 async function run() {
     try {
         const ghContext = github.context;
-        if (ghContext.eventName !== 'pull_request') {
-            throw new Error(`expect pull_request event, but get ${ghContext.eventName}`);
-        }
+        // if (ghContext.eventName !== 'pull_request') {
+        //   throw new Error(
+        //     `expect pull_request event, but get ${ghContext.eventName}`
+        //   )
+        // }
         const prPayload = ghContext.payload;
-        if (prPayload.action !== 'closed') {
-            throw new Error('expect pull request was merged');
-        }
-        if (!prPayload.pull_request.merged) {
-            throw new Error('expect pull request was merged');
-        }
+        // if (prPayload.action !== 'closed') {
+        //   throw new Error('expect pull request was merged')
+        // }
+        // if (!prPayload.pull_request.merged) {
+        //   throw new Error('expect pull request was merged')
+        // }
         const globber = await glob.create('**');
         for await (const file of globber.globGenerator()) {
             core.info(file);
