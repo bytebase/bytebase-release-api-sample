@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: printkk
-        uses: ./actions/bytebase-cicd
+        uses: ./.github/actions/bytebase-cicd
       - name: Login to Bytebase
         id: login
         uses: ./.github/actions/bytebase-login
