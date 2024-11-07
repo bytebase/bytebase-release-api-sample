@@ -26,6 +26,8 @@ export async function run(): Promise<void> {
     //   throw new Error('expect pull request was merged')
     // }
 
+    core.info(process.env.GITHUB_WORKSPACE ?? 'not found')
+
     const globber = await glob.create('**')
     for await (const file of globber.globGenerator()) {
       core.info(file)
