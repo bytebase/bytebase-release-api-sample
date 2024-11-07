@@ -26,7 +26,7 @@ export async function run(): Promise<void> {
 
    const globber = await glob.create('**')
    for await (const file of globber.globGenerator()) {
-     console.log(file)
+    core.info(file)
    }
 
     const commit = prPayload.pull_request.merge_commit_sha
