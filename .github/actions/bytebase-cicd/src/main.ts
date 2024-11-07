@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as glob from '@actions/glob'
 import * as github from '@actions/github'
+import * as fs from 'fs/promises'
 import { PullRequestEvent } from '@octokit/webhooks-types'
 
 import { wait } from './wait'
@@ -28,9 +29,11 @@ export async function run(): Promise<void> {
 
     core.info(process.env.GITHUB_WORKSPACE ?? 'not found')
 
-    const globber = await glob.create('**')
+    const globber = await glob.create('*.sql')
     for await (const file of globber.globGenerator()) {
       core.info(file)
+      const content = await fs.readFile(file)
+      core.info(content.toString())
     }
 
     const commit = prPayload.pull_request.merge_commit_sha

@@ -32425,6 +32425,7 @@ exports.run = run;
 const core = __importStar(__nccwpck_require__(4708));
 const glob = __importStar(__nccwpck_require__(4988));
 const github = __importStar(__nccwpck_require__(3802));
+const fs = __importStar(__nccwpck_require__(1943));
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -32445,9 +32446,11 @@ async function run() {
         //   throw new Error('expect pull request was merged')
         // }
         core.info(process.env.GITHUB_WORKSPACE ?? 'not found');
-        const globber = await glob.create('**');
+        const globber = await glob.create('*.sql');
         for await (const file of globber.globGenerator()) {
             core.info(file);
+            const content = await fs.readFile(file);
+            core.info(content.toString());
         }
         const commit = prPayload.pull_request.merge_commit_sha;
         const prNumber = prPayload.pull_request.number;
@@ -32538,6 +32541,14 @@ module.exports = require("events");
 
 "use strict";
 module.exports = require("fs");
+
+/***/ }),
+
+/***/ 1943:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("fs/promises");
 
 /***/ }),
 
