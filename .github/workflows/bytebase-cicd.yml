@@ -19,7 +19,7 @@ jobs:
       - name: printkk
         uses: ./.github/actions/bytebase-cicd
         with:
-          dir: "/"
+          dir: "/migrations/"
       - name: Login to Bytebase
         id: login
         uses: ./.github/actions/bytebase-login
