@@ -32,7 +32,7 @@ jobs:
         uses: ./.github/actions/bytebase-cicd
         with:
           dir: "/migrations/"
-          bb-token: ${{ steps.login.output.token }}
+          bb-token: ${{ steps.login.outputs.token }}
           bb-url: ${{ env.BYTEBASE_URL }}
           bb-project: ${{ env.BYTEBASE_PROJECT }}
           gh-token: ${{ secrets.GITHUB_TOKEN }}
