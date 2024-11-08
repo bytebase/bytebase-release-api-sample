@@ -1,4 +1,4 @@
-name: Check Migration status
+name: Bytebase cicd
 
 on:
   push:
@@ -29,7 +29,8 @@ jobs:
         id: check
         uses: ./.github/actions/check-issue-status
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gh-token: ${{ secrets.GITHUB_TOKEN }}
+          dir: "/"
           pattern: "**/*.up.sql"
           url: ${{ env.BYTEBASE_URL }}
           token: ${{ steps.login.outputs.token }}

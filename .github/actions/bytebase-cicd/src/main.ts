@@ -28,9 +28,9 @@ export async function run(): Promise<void> {
     //   throw new Error('expect pull request was merged')
     // }
 
-    const bbToken = core.getInput('bb-token', { required: true })
-    const bbUrl = core.getInput('bb-url', { required: true })
-    const ghToken = core.getInput('gh-token', { required: true })
+    // const bbToken = core.getInput('bb-token', { required: true })
+    // const bbUrl = core.getInput('bb-url', { required: true })
+    // const ghToken = core.getInput('gh-token', { required: true })
     const dir = core.getInput('dir', { required: true })
     const globPattern = path.join('./', dir, '*.sql')
 
