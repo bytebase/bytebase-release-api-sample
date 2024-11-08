@@ -32536,7 +32536,7 @@ async function run() {
         }
         const prPayload = ghContext.payload;
         if (prPayload.action !== 'closed') {
-            throw new Error('expect pull request was merged');
+            throw new Error(`expect pull request was merged, get ${prPayload.action}`);
         }
         if (!prPayload.pull_request.merged) {
             throw new Error('expect pull request was merged');
