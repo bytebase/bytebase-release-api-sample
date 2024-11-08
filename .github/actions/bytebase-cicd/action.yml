@@ -15,6 +15,9 @@ inputs:
   bb-token:
     description: 'The Bytebase access token'
     required: true
+  bb-project:
+    description: 'The Bytebase project ID'
+    required: true
   dir:
     description:
       'The directory where this action creates release from. Example:
@@ -23,14 +26,11 @@ inputs:
   gh-token:
     description: 'The github access token'
     required: true
-  milliseconds:
-    description: 'Your input description here'
-    default: '1000'
 
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  release-url:
+    description: 'The created Bytebase release URL'
 
 runs:
   using: node20

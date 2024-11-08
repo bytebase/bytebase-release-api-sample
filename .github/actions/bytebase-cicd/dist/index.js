@@ -32392,6 +32392,101 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 2846:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createRelease = createRelease;
+//ts-worksheet-with-variables
+const hc = __importStar(__nccwpck_require__(7952));
+const main_1 = __nccwpck_require__(7855);
+async function batchCreateSheet(files) {
+    let url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/sheets:batchCreate`;
+    const c = new hc.HttpClient();
+    const requests = files.map(f => {
+        return {
+            sheet: {
+                title: `sheet for file ${f.name}`,
+                content: Buffer.from(f.content, 'utf8').toString('base64')
+            }
+        };
+    });
+    let response = await c.postJson(url, {
+        requests: requests
+    }, {
+        authorization: `Bearer ${(0, main_1.ctx)().bbToken}`
+    });
+    const result = response.result;
+    return result.sheets.map(v => v.name);
+}
+let migrationFiles = [
+    {
+        name: '1.sql',
+        version: '1',
+        content: 'select 1'
+    },
+    {
+        name: '2.sql',
+        version: '2',
+        content: 'select 2'
+    }
+];
+async function createRelease(migrationFiles) {
+    const c = new hc.HttpClient();
+    let url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/releases`;
+    let files = [];
+    const sheets = await batchCreateSheet(migrationFiles);
+    for (let i = 0; i < migrationFiles.length; i++) {
+        const f = migrationFiles[i];
+        const sheet = sheets[i];
+        files.push({
+            path: f.name,
+            version: f.version,
+            sheet: sheet,
+            type: 'VERSIONED'
+        });
+    }
+    const response = await c.postJson(url, {
+        title: `release for commit ${(0, main_1.ctx)().commit}`,
+        files: files,
+        vcsSource: {
+            vcsType: 'GITHUB',
+            pullRequestUrl: ''
+        }
+    }, {
+        authorization: `Bearer ${(0, main_1.ctx)().bbToken}`
+    });
+    return response.result.name;
+}
+
+
+/***/ }),
+
 /***/ 7855:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -32421,7 +32516,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ctx = void 0;
 exports.run = run;
+const bb_1 = __nccwpck_require__(2846);
 const core = __importStar(__nccwpck_require__(4708));
 const glob = __importStar(__nccwpck_require__(4988));
 const github = __importStar(__nccwpck_require__(3802));
@@ -32434,24 +32531,34 @@ const path = __importStar(__nccwpck_require__(6928));
 async function run() {
     try {
         const ghContext = github.context;
-        // if (ghContext.eventName !== 'pull_request') {
-        //   throw new Error(
-        //     `expect pull_request event, but get ${ghContext.eventName}`
-        //   )
-        // }
+        if (ghContext.eventName !== 'pull_request') {
+            throw new Error(`expect pull_request event, but get ${ghContext.eventName}`);
+        }
         const prPayload = ghContext.payload;
-        // if (prPayload.action !== 'closed') {
-        //   throw new Error('expect pull request was merged')
-        // }
-        // if (!prPayload.pull_request.merged) {
-        //   throw new Error('expect pull request was merged')
-        // }
-        // const bbToken = core.getInput('bb-token', { required: true })
-        // const bbUrl = core.getInput('bb-url', { required: true })
-        // const ghToken = core.getInput('gh-token', { required: true })
+        if (prPayload.action !== 'closed') {
+            throw new Error('expect pull request was merged');
+        }
+        if (!prPayload.pull_request.merged) {
+            throw new Error('expect pull request was merged');
+        }
+        const commit = prPayload.pull_request.merge_commit_sha ?? 'unknown';
+        const prNumber = prPayload.pull_request.number;
+        const bbToken = core.getInput('bb-token', { required: true });
+        const bbUrl = core.getInput('bb-url', { required: true });
+        const bbProject = core.getInput('bb-project', { required: true });
+        const ghToken = core.getInput('gh-token', { required: true });
+        exports.ctx = () => {
+            return {
+                bbUrl: bbUrl,
+                bbToken: bbToken,
+                bbProject: bbProject,
+                commit: commit
+            };
+        };
         const dir = core.getInput('dir', { required: true });
         const globPattern = path.join('./', dir, '*.sql');
         const versionReg = /^\d+/;
+        let files = [];
         const globber = await glob.create(globPattern);
         for await (const file of globber.globGenerator()) {
             core.info(file);
@@ -32465,9 +32572,14 @@ async function run() {
             }
             const version = versionM[0];
             core.info(version);
+            files.push({
+                name: filename,
+                version: version,
+                content: content
+            });
         }
-        const commit = prPayload.pull_request.merge_commit_sha;
-        const prNumber = prPayload.pull_request.number;
+        const release = await (0, bb_1.createRelease)(files);
+        core.setOutput('release-url', `${(0, exports.ctx)().bbUrl}/${release}`);
     }
     catch (error) {
         // Fail the workflow run if an error occurs
@@ -32475,10 +32587,15 @@ async function run() {
             core.setFailed(error.message);
     }
 }
-async function getFiles() { }
-async function createRelease() {
-    return;
-}
+let ctx = () => {
+    return {
+        bbUrl: 'http://localhost:8080',
+        bbToken: 'eyJhbGciOiJIUzI1NiIsImtpZCI6InYxIiwidHlwIjoiSldUIn0.eyJuYW1lIjoiTWUiLCJpc3MiOiJieXRlYmFzZSIsInN1YiI6IjEwMSIsImF1ZCI6WyJiYi51c2VyLmFjY2Vzcy5kZXYiXSwiZXhwIjoxNzMxODMyMzM3LCJpYXQiOjE3MzEwNTQ3Mzd9.qQOcIpmYOC-yHxjG_4M2vUNgHqFKl8ZjBwBi8nojqXk',
+        bbProject: 'db333',
+        commit: ''
+    };
+};
+exports.ctx = ctx;
 
 
 /***/ }),
