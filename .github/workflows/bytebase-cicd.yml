@@ -32,7 +32,7 @@ jobs:
         uses: ./.github/actions/check-issue-status
         with:
           gh-token: ${{ secrets.GITHUB_TOKEN }}
-          dir: "/"
+          dir: "/migrations/"
           pattern: "**/*.up.sql"
           url: ${{ env.BYTEBASE_URL }}
           token: ${{ steps.login.outputs.token }}
