@@ -12,12 +12,14 @@ jobs:
       BYTEBASE_SERVICE_ACCOUNT: "ci@service.bytebase.com"
       PROJECT: "example"
       ISSUE_TITLE: "[${{ github.repository }}#${{ github.event.pull_request.number }}] ${{ github.event.pull_request.title }}"
-    name: Check Migration Status
+    name: Bytebase cicd
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: printkk
         uses: ./.github/actions/bytebase-cicd
+        with:
+          dir: "/"
       - name: Login to Bytebase
         id: login
         uses: ./.github/actions/bytebase-login
