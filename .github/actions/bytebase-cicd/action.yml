@@ -15,6 +15,11 @@ inputs:
   bb-token:
     description: 'The Bytebase access token'
     required: true
+  dir:
+    description:
+      'The directory where this action creates release from. Example:
+      `bytebase/migrations`'
+    required: true
   gh-token:
     description: 'The github access token'
     required: true

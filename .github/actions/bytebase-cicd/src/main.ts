@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import * as glob from '@actions/glob'
 import * as github from '@actions/github'
 import * as fs from 'fs/promises'
+import * as path from 'path'
 import { PullRequestEvent } from '@octokit/webhooks-types'
 
 import { wait } from './wait'
@@ -27,21 +28,32 @@ export async function run(): Promise<void> {
     //   throw new Error('expect pull request was merged')
     // }
 
-    core.info(process.env.GITHUB_WORKSPACE ?? 'not found')
+    const bbToken = core.getInput('bb-token', { required: true })
+    const bbUrl = core.getInput('bb-url', { required: true })
+    const ghToken = core.getInput('gh-token', { required: true })
+    const dir = core.getInput('dir', { required: true })
+    const globPattern = path.join('./', dir, '*.sql')
 
-    const globber = await glob.create('./migrations/*.sql')
+    const versionReg = /^\d+/
+
+    const globber = await glob.create(globPattern)
     for await (const file of globber.globGenerator()) {
       core.info(file)
       const content = await fs.readFile(file, { encoding: 'utf8' })
       core.info(content.toString())
+      const filename = path.basename(file)
+
+      const versionM = filename.match(versionReg)
+      if (!versionM) {
+        core.info(`failed to get version, ignore ${file}`)
+        continue
+      }
+      const version = versionM[0]
+      core.info(version)
     }
 
     const commit = prPayload.pull_request.merge_commit_sha
     const prNumber = prPayload.pull_request.number
-
-    const bbToken = core.getInput('bb-token', { required: true })
-    const bbUrl = core.getInput('bb-url', { required: true })
-    const ghToken = core.getInput('gh-token', { required: true })
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

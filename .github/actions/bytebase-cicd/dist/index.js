@@ -32426,6 +32426,7 @@ const core = __importStar(__nccwpck_require__(4708));
 const glob = __importStar(__nccwpck_require__(4988));
 const github = __importStar(__nccwpck_require__(3802));
 const fs = __importStar(__nccwpck_require__(1943));
+const path = __importStar(__nccwpck_require__(6928));
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -32445,18 +32446,28 @@ async function run() {
         // if (!prPayload.pull_request.merged) {
         //   throw new Error('expect pull request was merged')
         // }
-        core.info(process.env.GITHUB_WORKSPACE ?? 'not found');
-        const globber = await glob.create('./migrations/*.sql');
+        const bbToken = core.getInput('bb-token', { required: true });
+        const bbUrl = core.getInput('bb-url', { required: true });
+        const ghToken = core.getInput('gh-token', { required: true });
+        const dir = core.getInput('dir', { required: true });
+        const globPattern = path.join('./', dir, '*.sql');
+        const versionReg = /^\d+/;
+        const globber = await glob.create(globPattern);
         for await (const file of globber.globGenerator()) {
             core.info(file);
             const content = await fs.readFile(file, { encoding: 'utf8' });
             core.info(content.toString());
+            const filename = path.basename(file);
+            const versionM = filename.match(versionReg);
+            if (!versionM) {
+                core.info(`failed to get version, ignore ${file}`);
+                continue;
+            }
+            const version = versionM[0];
+            core.info(version);
         }
         const commit = prPayload.pull_request.merge_commit_sha;
         const prNumber = prPayload.pull_request.number;
-        const bbToken = core.getInput('bb-token', { required: true });
-        const bbUrl = core.getInput('bb-url', { required: true });
-        const ghToken = core.getInput('gh-token', { required: true });
     }
     catch (error) {
         // Fail the workflow run if an error occurs
