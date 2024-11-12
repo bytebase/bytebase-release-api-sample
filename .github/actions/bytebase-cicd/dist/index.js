@@ -32393,41 +32393,20 @@ function wrappy (fn, cb) {
 /***/ }),
 
 /***/ 2846:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createRelease = createRelease;
+exports.previewPlan = previewPlan;
+exports.createPlan = createPlan;
+exports.createRollout = createRollout;
 //ts-worksheet-with-variables
-const hc = __importStar(__nccwpck_require__(7952));
 const main_1 = __nccwpck_require__(7855);
 async function batchCreateSheet(files) {
     let url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/sheets:batchCreate`;
-    const c = new hc.HttpClient();
+    const c = (0, main_1.ctx)().c;
     const requests = files.map(f => {
         return {
             sheet: {
@@ -32438,8 +32417,6 @@ async function batchCreateSheet(files) {
     });
     let response = await c.postJson(url, {
         requests: requests
-    }, {
-        authorization: `Bearer ${(0, main_1.ctx)().bbToken}`
     });
     const result = response.result;
     return result.sheets.map(v => v.name);
@@ -32457,7 +32434,7 @@ let migrationFiles = [
     }
 ];
 async function createRelease(migrationFiles) {
-    const c = new hc.HttpClient();
+    const c = (0, main_1.ctx)().c;
     let url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/releases`;
     let files = [];
     const sheets = await batchCreateSheet(migrationFiles);
@@ -32478,9 +32455,29 @@ async function createRelease(migrationFiles) {
             vcsType: 'GITHUB',
             pullRequestUrl: ''
         }
-    }, {
-        authorization: `Bearer ${(0, main_1.ctx)().bbToken}`
     });
+    return response.result.name;
+}
+async function previewPlan(release) {
+    const c = (0, main_1.ctx)().c;
+    const url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}:previewPlan`;
+    const request = {
+        release: release,
+        targets: [(0, main_1.ctx)().bbDatabase]
+    };
+    const response = await c.postJson(url, request);
+    return response.result?.plan;
+}
+async function createPlan(plan) {
+    const c = (0, main_1.ctx)().c;
+    const url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/plans`;
+    const response = await c.postJson(url, plan);
+    return response.result;
+}
+async function createRollout(rollout) {
+    const c = (0, main_1.ctx)().c;
+    const url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/rollouts`;
+    const response = await c.postJson(url, rollout);
     return response.result.name;
 }
 
@@ -32519,6 +32516,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ctx = void 0;
 exports.run = run;
 const bb_1 = __nccwpck_require__(2846);
+const hc = __importStar(__nccwpck_require__(7952));
 const core = __importStar(__nccwpck_require__(4708));
 const glob = __importStar(__nccwpck_require__(4988));
 const github = __importStar(__nccwpck_require__(3802));
@@ -32546,13 +32544,20 @@ async function run() {
         const bbToken = core.getInput('bb-token', { required: true });
         const bbUrl = core.getInput('bb-url', { required: true });
         const bbProject = core.getInput('bb-project', { required: true });
+        const bbDatabase = core.getInput('bb-database', { required: true });
         const ghToken = core.getInput('gh-token', { required: true });
         exports.ctx = () => {
             return {
                 bbUrl: bbUrl,
                 bbToken: bbToken,
                 bbProject: bbProject,
-                commit: commit
+                bbDatabase: bbDatabase,
+                commit: commit,
+                c: new hc.HttpClient('bytebase-cicd-action', [], {
+                    headers: {
+                        authorization: `Bearer ${(0, exports.ctx)().bbToken}`
+                    }
+                })
             };
         };
         const dir = core.getInput('dir', { required: true });
@@ -32561,9 +32566,7 @@ async function run() {
         let files = [];
         const globber = await glob.create(globPattern);
         for await (const file of globber.globGenerator()) {
-            core.info(file);
             const content = await fs.readFile(file, { encoding: 'utf8' });
-            core.info(content.toString());
             const filename = path.basename(file);
             const versionM = filename.match(versionReg);
             if (!versionM) {
@@ -32571,7 +32574,6 @@ async function run() {
                 continue;
             }
             const version = versionM[0];
-            core.info(version);
             files.push({
                 name: filename,
                 version: version,
@@ -32579,7 +32581,21 @@ async function run() {
             });
         }
         const release = await (0, bb_1.createRelease)(files);
-        core.setOutput('release-url', `${(0, exports.ctx)().bbUrl}/${release}`);
+        const releaseUrl = `${(0, exports.ctx)().bbUrl}/${release}`;
+        core.info(`Successfully created release at ${releaseUrl}`);
+        core.setOutput('release-url', releaseUrl);
+        const pPlan = await (0, bb_1.previewPlan)(release);
+        const s = pPlan?.steps.reduce((acc, step) => {
+            return acc + step.specs.length;
+        }, 0);
+        if (s === 0) {
+            throw new Error('plan has no specs');
+        }
+        const plan = await (0, bb_1.createPlan)(pPlan);
+        const rolloutName = (0, bb_1.createRollout)({ plan: plan.name });
+        const rolloutUrl = `${(0, exports.ctx)().bbUrl}/${rolloutName}`;
+        core.info(`Successfully created rollout at ${rolloutUrl}`);
+        core.setOutput('rollout-url', rolloutUrl);
     }
     catch (error) {
         // Fail the workflow run if an error occurs
@@ -32588,11 +32604,18 @@ async function run() {
     }
 }
 let ctx = () => {
+    const bbToken = 'eyJhbGciOiJIUzI1NiIsImtpZCI6InYxIiwidHlwIjoiSldUIn0.eyJuYW1lIjoiTWUiLCJpc3MiOiJieXRlYmFzZSIsInN1YiI6IjEwMSIsImF1ZCI6WyJiYi51c2VyLmFjY2Vzcy5kZXYiXSwiZXhwIjoxNzMxODMyMzM3LCJpYXQiOjE3MzEwNTQ3Mzd9.qQOcIpmYOC-yHxjG_4M2vUNgHqFKl8ZjBwBi8nojqXk';
     return {
         bbUrl: 'http://localhost:8080',
-        bbToken: 'eyJhbGciOiJIUzI1NiIsImtpZCI6InYxIiwidHlwIjoiSldUIn0.eyJuYW1lIjoiTWUiLCJpc3MiOiJieXRlYmFzZSIsInN1YiI6IjEwMSIsImF1ZCI6WyJiYi51c2VyLmFjY2Vzcy5kZXYiXSwiZXhwIjoxNzMxODMyMzM3LCJpYXQiOjE3MzEwNTQ3Mzd9.qQOcIpmYOC-yHxjG_4M2vUNgHqFKl8ZjBwBi8nojqXk',
+        bbToken: bbToken,
         bbProject: 'db333',
-        commit: ''
+        bbDatabase: 'instances/dbdbdb/databases/db_1',
+        commit: '',
+        c: new hc.HttpClient('bytebase-cicd-action', [], {
+            headers: {
+                authorization: `Bearer ${bbToken}`
+            }
+        })
     };
 };
 exports.ctx = ctx;

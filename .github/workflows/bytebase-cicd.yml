@@ -17,6 +17,7 @@ jobs:
       BYTEBASE_URL: "https://df5e-185-220-236-33.ngrok-free.app"
       BYTEBASE_SERVICE_ACCOUNT: "xz@bytebase.com"
       BYTEBASE_PROJECT: "db333"
+      BYTEBASE_DATABASE: "instances/dbdbdb/databases/db_1"
     name: Bytebase cicd
     steps:
       - name: Checkout
@@ -35,4 +36,5 @@ jobs:
           bb-token: ${{ steps.login.outputs.token }}
           bb-url: ${{ env.BYTEBASE_URL }}
           bb-project: ${{ env.BYTEBASE_PROJECT }}
+          bb-database: ${{ env.BYTEBASE_DATABASE }}
           gh-token: ${{ secrets.GITHUB_TOKEN }}

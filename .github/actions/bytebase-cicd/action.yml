@@ -31,6 +31,8 @@ inputs:
 outputs:
   release-url:
     description: 'The created Bytebase release URL'
+  rollout-url:
+    description: 'The created Bytebase rollout URL'
 
 runs:
   using: node20
