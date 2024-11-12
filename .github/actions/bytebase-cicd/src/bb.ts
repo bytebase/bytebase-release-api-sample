@@ -15,7 +15,7 @@ interface File {
 }
 
 async function batchCreateSheet(files: MigrationFile[]): Promise<string[]> {
-  let url = `${ctx().bbUrl}/v1/projects/${ctx().bbProject}/sheets:batchCreate`
+  const url = `${ctx().bbUrl}/v1/projects/${ctx().bbProject}/sheets:batchCreate`
 
   const c = ctx().c
 
@@ -28,9 +28,15 @@ async function batchCreateSheet(files: MigrationFile[]): Promise<string[]> {
     }
   })
 
-  let response = await c.postJson(url, {
+  const response = await c.postJson<any>(url, {
     requests: requests
   })
+
+  if (response.statusCode !== 200) {
+    throw new Error(
+      `failed to create sheet, ${response.statusCode}, ${response.result.message}`
+    )
+  }
 
   const result = response.result as {
     sheets: { name: string }[]
@@ -55,7 +61,7 @@ let migrationFiles = [
 export async function createRelease(migrationFiles: MigrationFile[]) {
   const c = ctx().c
 
-  let url = `${ctx().bbUrl}/v1/projects/${ctx().bbProject}/releases`
+  const url = `${ctx().bbUrl}/v1/projects/${ctx().bbProject}/releases`
 
   let files: File[] = []
 
@@ -72,7 +78,7 @@ export async function createRelease(migrationFiles: MigrationFile[]) {
     })
   }
 
-  const response = await c.postJson(url, {
+  const response = await c.postJson<any>(url, {
     title: `release for commit ${ctx().commit}`,
     files: files,
     vcsSource: {
@@ -81,11 +87,13 @@ export async function createRelease(migrationFiles: MigrationFile[]) {
     }
   })
 
-  return (
-    response.result as {
-      name: string
-    }
-  ).name
+  if (response.statusCode !== 200) {
+    throw new Error(
+      `failed to create release, ${response.statusCode}, ${response.result.message}`
+    )
+  }
+
+  return response.result.name
 }
 
 export async function previewPlan(release: string) {
@@ -106,6 +114,12 @@ export async function previewPlan(release: string) {
     }
   }>(url, request)
 
+  if (response.statusCode !== 200) {
+    throw new Error(
+      `failed to preview plan, ${response.statusCode}, ${(response.result as any).message}`
+    )
+  }
+
   return response.result?.plan
 }
 
@@ -116,6 +130,12 @@ export async function createPlan(plan: any) {
 
   const response = await c.postJson<any>(url, plan)
 
+  if (response.statusCode !== 200) {
+    throw new Error(
+      `failed to create plan, ${response.statusCode}, ${response.result.message}`
+    )
+  }
+
   return response.result
 }
 
@@ -125,6 +145,12 @@ export async function createRollout(rollout: any) {
   const url = `${ctx().bbUrl}/v1/projects/${ctx().bbProject}/rollouts`
 
   const response = await c.postJson<any>(url, rollout)
+
+  if (response.statusCode !== 200) {
+    throw new Error(
+      `failed to create rollout, ${response.statusCode}, ${response.result.message}`
+    )
+  }
 
   return response.result.name
 }

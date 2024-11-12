@@ -32405,7 +32405,7 @@ exports.createRollout = createRollout;
 //ts-worksheet-with-variables
 const main_1 = __nccwpck_require__(7855);
 async function batchCreateSheet(files) {
-    let url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/sheets:batchCreate`;
+    const url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/sheets:batchCreate`;
     const c = (0, main_1.ctx)().c;
     const requests = files.map(f => {
         return {
@@ -32415,9 +32415,12 @@ async function batchCreateSheet(files) {
             }
         };
     });
-    let response = await c.postJson(url, {
+    const response = await c.postJson(url, {
         requests: requests
     });
+    if (response.statusCode !== 200) {
+        throw new Error(`failed to create sheet, ${response.statusCode}, ${response.result.message}`);
+    }
     const result = response.result;
     return result.sheets.map(v => v.name);
 }
@@ -32435,7 +32438,7 @@ let migrationFiles = [
 ];
 async function createRelease(migrationFiles) {
     const c = (0, main_1.ctx)().c;
-    let url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/releases`;
+    const url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/releases`;
     let files = [];
     const sheets = await batchCreateSheet(migrationFiles);
     for (let i = 0; i < migrationFiles.length; i++) {
@@ -32456,6 +32459,9 @@ async function createRelease(migrationFiles) {
             pullRequestUrl: ''
         }
     });
+    if (response.statusCode !== 200) {
+        throw new Error(`failed to create release, ${response.statusCode}, ${response.result.message}`);
+    }
     return response.result.name;
 }
 async function previewPlan(release) {
@@ -32466,18 +32472,27 @@ async function previewPlan(release) {
         targets: [(0, main_1.ctx)().bbDatabase]
     };
     const response = await c.postJson(url, request);
+    if (response.statusCode !== 200) {
+        throw new Error(`failed to preview plan, ${response.statusCode}, ${response.result.message}`);
+    }
     return response.result?.plan;
 }
 async function createPlan(plan) {
     const c = (0, main_1.ctx)().c;
     const url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/plans`;
     const response = await c.postJson(url, plan);
+    if (response.statusCode !== 200) {
+        throw new Error(`failed to create plan, ${response.statusCode}, ${response.result.message}`);
+    }
     return response.result;
 }
 async function createRollout(rollout) {
     const c = (0, main_1.ctx)().c;
     const url = `${(0, main_1.ctx)().bbUrl}/v1/projects/${(0, main_1.ctx)().bbProject}/rollouts`;
     const response = await c.postJson(url, rollout);
+    if (response.statusCode !== 200) {
+        throw new Error(`failed to create rollout, ${response.statusCode}, ${response.result.message}`);
+    }
     return response.result.name;
 }
 
