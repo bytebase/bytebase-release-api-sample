@@ -98,7 +98,7 @@ export async function run(): Promise<void> {
     }
 
     const plan = await createPlan(pPlan)
-    const rolloutName = createRollout({ plan: plan.name })
+    const rolloutName = await createRollout({ plan: plan.name })
 
     const rolloutUrl = `${ctx().bbUrl}/${rolloutName}`
     core.info(`Successfully created rollout at ${rolloutUrl}`)

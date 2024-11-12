@@ -32592,7 +32592,7 @@ async function run() {
             throw new Error('plan has no specs');
         }
         const plan = await (0, bb_1.createPlan)(pPlan);
-        const rolloutName = (0, bb_1.createRollout)({ plan: plan.name });
+        const rolloutName = await (0, bb_1.createRollout)({ plan: plan.name });
         const rolloutUrl = `${(0, exports.ctx)().bbUrl}/${rolloutName}`;
         core.info(`Successfully created rollout at ${rolloutUrl}`);
         core.setOutput('rollout-url', rolloutUrl);
