@@ -19,7 +19,8 @@ inputs:
     description: 'The Bytebase project ID'
     required: true
   bb-database:
-    description: 'The Bytebase database. Example: "instances/dbdbdb/databases/db_1"'
+    description:
+      'The Bytebase database. Example: "instances/dbdbdb/databases/db_1"'
     required: true
   dir:
     description:

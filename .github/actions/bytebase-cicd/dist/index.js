@@ -32555,7 +32555,7 @@ async function run() {
                 commit: commit,
                 c: new hc.HttpClient('bytebase-cicd-action', [], {
                     headers: {
-                        authorization: `Bearer ${(0, exports.ctx)().bbToken}`
+                        authorization: `Bearer ${bbToken}`
                     }
                 })
             };

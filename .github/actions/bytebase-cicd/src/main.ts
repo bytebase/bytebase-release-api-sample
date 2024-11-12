@@ -52,7 +52,7 @@ export async function run(): Promise<void> {
         commit: commit,
         c: new hc.HttpClient('bytebase-cicd-action', [], {
           headers: {
-            authorization: `Bearer ${ctx().bbToken}`
+            authorization: `Bearer ${bbToken}`
           }
         })
       }
