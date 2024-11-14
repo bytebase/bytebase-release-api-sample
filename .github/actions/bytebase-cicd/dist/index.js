@@ -32642,6 +32642,7 @@ async function run() {
         const rolloutUrl = `${(0, exports.ctx)().bbUrl}/${rolloutName}`;
         core.info(`Successfully created rollout at ${rolloutUrl}`);
         core.setOutput('rollout-url', rolloutUrl);
+        await runRolloutWait(rollout);
     }
     catch (error) {
         // Fail the workflow run if an error occurs

@@ -106,6 +106,8 @@ export async function run(): Promise<void> {
     const rolloutUrl = `${ctx().bbUrl}/${rolloutName}`
     core.info(`Successfully created rollout at ${rolloutUrl}`)
     core.setOutput('rollout-url', rolloutUrl)
+
+    await runRolloutWait(rollout)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
