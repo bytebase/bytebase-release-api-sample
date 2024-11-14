@@ -32514,6 +32514,9 @@ async function runStageTasks(stage) {
     const taskNames = stage.tasks
         .filter((e) => e.status === 'NOT_STARTED')
         .map((e) => e.name);
+    if (taskNames.length === 0) {
+        return;
+    }
     const c = (0, main_1.ctx)().c;
     const url = `${(0, main_1.ctx)().bbUrl}/v1/${stageName}/tasks:batchRun`;
     const request = {

@@ -178,6 +178,9 @@ export async function runStageTasks(stage: any) {
   const taskNames = stage.tasks
     .filter((e: { status: string }) => e.status === 'NOT_STARTED')
     .map((e: { name: string }) => e.name)
+  if (taskNames.length === 0) {
+    return
+  }
   const c = ctx().c
   const url = `${ctx().bbUrl}/v1/${stageName}/tasks:batchRun`
   const request = {
