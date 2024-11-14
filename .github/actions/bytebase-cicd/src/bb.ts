@@ -152,5 +152,43 @@ export async function createRollout(rollout: any) {
     )
   }
 
-  return response.result.name
+  return response.result
+}
+
+export async function getRollout(rolloutName: string) {
+  const c = ctx().c
+  const url = `${ctx().bbUrl}/v1/${rolloutName}`
+  const response = await c.getJson<any>(url)
+
+  if (response.statusCode !== 200) {
+    throw new Error(
+      `failed to get rollout, ${response.statusCode}, ${response.result.message}`
+    )
+  }
+
+  if (!response.result) {
+    throw new Error(`rollout not found`)
+  }
+
+  return response.result
+}
+
+export async function runStageTasks(stage: any) {
+  const stageName = stage.name
+  const taskNames = stage.tasks
+    .filter((e: { status: string }) => e.status === 'NOT_STARTED')
+    .map((e: { name: string }) => e.name)
+  const c = ctx().c
+  const url = `${ctx().bbUrl}/v1/${stageName}/tasks:batchRun`
+  const request = {
+    tasks: taskNames,
+    reason: `run ${stage.title}`
+  }
+  const response = await c.postJson<any>(url, request)
+
+  if (response.statusCode !== 200) {
+    throw new Error(
+      `failed to run tasks, ${response.statusCode}, ${response.result.message}`
+    )
+  }
 }

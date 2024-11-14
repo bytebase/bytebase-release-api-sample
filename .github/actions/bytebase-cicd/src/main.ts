@@ -3,7 +3,9 @@ import {
   createPlan,
   createRelease,
   createRollout,
-  previewPlan
+  getRollout,
+  previewPlan,
+  runStageTasks
 } from './bb'
 import * as hc from '@actions/http-client'
 import * as core from '@actions/core'
@@ -98,7 +100,8 @@ export async function run(): Promise<void> {
     }
 
     const plan = await createPlan(pPlan)
-    const rolloutName = await createRollout({ plan: plan.name })
+    const rollout = await createRollout({ plan: plan.name })
+    const rolloutName = rollout.name
 
     const rolloutUrl = `${ctx().bbUrl}/${rolloutName}`
     core.info(`Successfully created rollout at ${rolloutUrl}`)
@@ -106,6 +109,49 @@ export async function run(): Promise<void> {
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
+  }
+}
+
+function getStageStatus(stage: any) {
+  return {
+    done: stage.tasks.every((e: { status: string }) => e.status === 'DONE'),
+    failedTasks: stage.tasks.filter(
+      (e: { status: string }) => e.status === 'FAILED'
+    )
+  }
+}
+
+async function runRolloutWait(rollout: any) {
+  const stageCount = rollout.stages.length
+  if (stageCount === 0) {
+    return
+  }
+
+  core.info(`The rollout has ${stageCount} stages:`)
+  core.info(rollout.stages.map((e: { title: any }) => e.title))
+
+  let i = 0
+  while (true) {
+    if (i >= stageCount) {
+      break
+    }
+
+    const r = await getRollout(rollout.name)
+    const stage = r.stages[i]
+    const { done, failedTasks } = getStageStatus(stage)
+    if (done) {
+      console.log(`${stage.title} done`)
+      i++
+      continue
+    }
+    if (failedTasks.length > 0) {
+      throw new Error(
+        `task ${failedTasks.map((e: { name: any }) => e.name)} failed`
+      )
+    }
+
+    await runStageTasks(stage)
+    await sleep(5000)
   }
 }
 
@@ -125,4 +171,8 @@ export let ctx = () => {
       }
     })
   }
+}
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }

@@ -32402,6 +32402,8 @@ exports.createRelease = createRelease;
 exports.previewPlan = previewPlan;
 exports.createPlan = createPlan;
 exports.createRollout = createRollout;
+exports.getRollout = getRollout;
+exports.runStageTasks = runStageTasks;
 //ts-worksheet-with-variables
 const main_1 = __nccwpck_require__(7855);
 async function batchCreateSheet(files) {
@@ -32493,7 +32495,35 @@ async function createRollout(rollout) {
     if (response.statusCode !== 200) {
         throw new Error(`failed to create rollout, ${response.statusCode}, ${response.result.message}`);
     }
-    return response.result.name;
+    return response.result;
+}
+async function getRollout(rolloutName) {
+    const c = (0, main_1.ctx)().c;
+    const url = `${(0, main_1.ctx)().bbUrl}/v1/${rolloutName}`;
+    const response = await c.getJson(url);
+    if (response.statusCode !== 200) {
+        throw new Error(`failed to get rollout, ${response.statusCode}, ${response.result.message}`);
+    }
+    if (!response.result) {
+        throw new Error(`rollout not found`);
+    }
+    return response.result;
+}
+async function runStageTasks(stage) {
+    const stageName = stage.name;
+    const taskNames = stage.tasks
+        .filter((e) => e.status === 'NOT_STARTED')
+        .map((e) => e.name);
+    const c = (0, main_1.ctx)().c;
+    const url = `${(0, main_1.ctx)().bbUrl}/v1/${stageName}/tasks:batchRun`;
+    const request = {
+        tasks: taskNames,
+        reason: `run ${stage.title}`
+    };
+    const response = await c.postJson(url, request);
+    if (response.statusCode !== 200) {
+        throw new Error(`failed to run tasks, ${response.statusCode}, ${response.result.message}`);
+    }
 }
 
 
@@ -32607,7 +32637,8 @@ async function run() {
             throw new Error('plan has no specs');
         }
         const plan = await (0, bb_1.createPlan)(pPlan);
-        const rolloutName = await (0, bb_1.createRollout)({ plan: plan.name });
+        const rollout = await (0, bb_1.createRollout)({ plan: plan.name });
+        const rolloutName = rollout.name;
         const rolloutUrl = `${(0, exports.ctx)().bbUrl}/${rolloutName}`;
         core.info(`Successfully created rollout at ${rolloutUrl}`);
         core.setOutput('rollout-url', rolloutUrl);
@@ -32616,6 +32647,39 @@ async function run() {
         // Fail the workflow run if an error occurs
         if (error instanceof Error)
             core.setFailed(error.message);
+    }
+}
+function getStageStatus(stage) {
+    return {
+        done: stage.tasks.every((e) => e.status === 'DONE'),
+        failedTasks: stage.tasks.filter((e) => e.status === 'FAILED')
+    };
+}
+async function runRolloutWait(rollout) {
+    const stageCount = rollout.stages.length;
+    if (stageCount === 0) {
+        return;
+    }
+    core.info(`The rollout has ${stageCount} stages:`);
+    core.info(rollout.stages.map((e) => e.title));
+    let i = 0;
+    while (true) {
+        if (i >= stageCount) {
+            break;
+        }
+        const r = await (0, bb_1.getRollout)(rollout.name);
+        const stage = r.stages[i];
+        const { done, failedTasks } = getStageStatus(stage);
+        if (done) {
+            console.log(`${stage.title} done`);
+            i++;
+            continue;
+        }
+        if (failedTasks.length > 0) {
+            throw new Error(`task ${failedTasks.map((e) => e.name)} failed`);
+        }
+        await (0, bb_1.runStageTasks)(stage);
+        await sleep(5000);
     }
 }
 let ctx = () => {
@@ -32634,6 +32698,9 @@ let ctx = () => {
     };
 };
 exports.ctx = ctx;
+async function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 
 /***/ }),
