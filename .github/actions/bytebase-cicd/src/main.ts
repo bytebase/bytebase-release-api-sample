@@ -13,7 +13,7 @@ import * as glob from '@actions/glob'
 import * as github from '@actions/github'
 import * as fs from 'fs/promises'
 import * as path from 'path'
-import { PullRequestEvent } from '@octokit/webhooks-types'
+import { PushEvent, PullRequestEvent } from '@octokit/webhooks-types'
 
 /**
  * The main function for the action.
@@ -23,21 +23,13 @@ export async function run(): Promise<void> {
   try {
     const ghContext = github.context
 
-    if (ghContext.eventName !== 'pull_request') {
-      throw new Error(
-        `expect pull_request event, but get ${ghContext.eventName}`
-      )
+    if (ghContext.eventName !== 'push') {
+      throw new Error(`expect push event, but get ${ghContext.eventName}`)
     }
-    const prPayload = ghContext.payload as PullRequestEvent
-    if (prPayload.action !== 'closed') {
-      throw new Error(`expect pull request was merged, get ${prPayload.action}`)
-    }
-    if (!prPayload.pull_request.merged) {
-      throw new Error('expect pull request was merged')
-    }
+    const pushPayload = ghContext.payload as PushEvent
 
-    const commit = prPayload.pull_request.merge_commit_sha ?? 'unknown'
-    const prNumber = prPayload.pull_request.number
+    const commit = pushPayload.after ?? 'unknown'
+    const commitUrl = pushPayload.head_commit?.url ?? ''
 
     const bbToken = core.getInput('bb-token', { required: true })
     const bbUrl = core.getInput('bb-url', { required: true })
@@ -52,6 +44,7 @@ export async function run(): Promise<void> {
         bbProject: bbProject,
         bbDatabase: bbDatabase,
         commit: commit,
+        commitUrl: commitUrl,
         c: new hc.HttpClient('bytebase-cicd-action', [], {
           headers: {
             authorization: `Bearer ${bbToken}`
@@ -167,6 +160,7 @@ export let ctx = () => {
     bbProject: 'db333',
     bbDatabase: 'instances/dbdbdb/databases/db_1',
     commit: '',
+    commitUrl: '',
     c: new hc.HttpClient('bytebase-cicd-action', [], {
       headers: {
         authorization: `Bearer ${bbToken}`

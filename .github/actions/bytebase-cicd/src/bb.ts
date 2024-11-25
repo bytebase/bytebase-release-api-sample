@@ -83,7 +83,7 @@ export async function createRelease(migrationFiles: MigrationFile[]) {
     files: files,
     vcsSource: {
       vcsType: 'GITHUB',
-      pullRequestUrl: ''
+      pullRequestUrl: ctx().commitUrl
     }
   })
 

@@ -32458,7 +32458,7 @@ async function createRelease(migrationFiles) {
         files: files,
         vcsSource: {
             vcsType: 'GITHUB',
-            pullRequestUrl: ''
+            pullRequestUrl: (0, main_1.ctx)().commitUrl
         }
     });
     if (response.statusCode !== 200) {
@@ -32577,18 +32577,12 @@ const path = __importStar(__nccwpck_require__(6928));
 async function run() {
     try {
         const ghContext = github.context;
-        if (ghContext.eventName !== 'pull_request') {
-            throw new Error(`expect pull_request event, but get ${ghContext.eventName}`);
+        if (ghContext.eventName !== 'push') {
+            throw new Error(`expect push event, but get ${ghContext.eventName}`);
         }
-        const prPayload = ghContext.payload;
-        if (prPayload.action !== 'closed') {
-            throw new Error(`expect pull request was merged, get ${prPayload.action}`);
-        }
-        if (!prPayload.pull_request.merged) {
-            throw new Error('expect pull request was merged');
-        }
-        const commit = prPayload.pull_request.merge_commit_sha ?? 'unknown';
-        const prNumber = prPayload.pull_request.number;
+        const pushPayload = ghContext.payload;
+        const commit = pushPayload.after ?? 'unknown';
+        const commitUrl = pushPayload.head_commit?.url ?? '';
         const bbToken = core.getInput('bb-token', { required: true });
         const bbUrl = core.getInput('bb-url', { required: true });
         const bbProject = core.getInput('bb-project', { required: true });
@@ -32601,6 +32595,7 @@ async function run() {
                 bbProject: bbProject,
                 bbDatabase: bbDatabase,
                 commit: commit,
+                commitUrl: commitUrl,
                 c: new hc.HttpClient('bytebase-cicd-action', [], {
                     headers: {
                         authorization: `Bearer ${bbToken}`
@@ -32694,6 +32689,7 @@ let ctx = () => {
         bbProject: 'db333',
         bbDatabase: 'instances/dbdbdb/databases/db_1',
         commit: '',
+        commitUrl: '',
         c: new hc.HttpClient('bytebase-cicd-action', [], {
             headers: {
                 authorization: `Bearer ${bbToken}`
