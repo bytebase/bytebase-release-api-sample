@@ -37,6 +37,19 @@ export async function run(): Promise<void> {
     const bbDatabase = core.getInput('bb-database', { required: true })
     const ghToken = core.getInput('gh-token', { required: true })
 
+    const configContent = await fs.readFile('./.bb.json', { encoding: 'utf8' })
+    const config = JSON.parse(configContent) as {
+      config: {
+        branch: string
+        project: string
+        database: string
+        dir: string
+      }[]
+    }
+
+    core.info(JSON.stringify(pushPayload))
+    core.info(configContent)
+
     ctx = () => {
       return {
         bbUrl: bbUrl,

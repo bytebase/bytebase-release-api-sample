@@ -32588,6 +32588,10 @@ async function run() {
         const bbProject = core.getInput('bb-project', { required: true });
         const bbDatabase = core.getInput('bb-database', { required: true });
         const ghToken = core.getInput('gh-token', { required: true });
+        const configContent = await fs.readFile('./.bb.json', { encoding: 'utf8' });
+        const config = JSON.parse(configContent);
+        core.info(JSON.stringify(pushPayload));
+        core.info(configContent);
         exports.ctx = () => {
             return {
                 bbUrl: bbUrl,
