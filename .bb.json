@@ -1,28 +1,29 @@
 {
-    "config": [
-        {
-            "branch": "hotfix",
-            "project": "db333",
-            "database": "instances/dbdbdb/databases/db_11",
-            "dir": "/migrations"
-        },
-        {
-            "branch": "main",
-            "project": "db333",
-            "database": "instances/dbdbdb/databases/db_1",
-            "dir": "/migrations"
-        },
-        {
-            "branch": "dev",
-            "project": "db333",
-            "database": "instances/dbdbdb/databases/db_2",
-            "dir": "/migrations"
-        },
-        {
-            "branch": "staging",
-            "project": "db333",
-            "database": "instances/dbdbdb/databases/db_3",
-            "dir": "/migrations"
-        }
-    ]
+  "url": "https://df5e-185-220-236-33.ngrok-free.app",
+  "branchConfig": [
+    {
+      "branch": "hotfix",
+      "project": "db333",
+      "database": "instances/dbdbdb/databases/db_11",
+      "dir": "/migrations"
+    },
+    {
+      "branch": "main",
+      "project": "db333",
+      "database": "instances/dbdbdb/databases/db_1",
+      "dir": "/migrations"
+    },
+    {
+      "branch": "dev",
+      "project": "db333",
+      "database": "instances/dbdbdb/databases/db_2",
+      "dir": "/migrations"
+    },
+    {
+      "branch": "staging",
+      "project": "db333",
+      "database": "instances/dbdbdb/databases/db_3",
+      "dir": "/migrations"
+    }
+  ]
 }

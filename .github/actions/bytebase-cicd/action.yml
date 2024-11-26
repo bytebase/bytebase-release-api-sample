@@ -9,23 +9,8 @@ branding:
 
 # Define your inputs here.
 inputs:
-  bb-url:
-    description: 'The Bytebase URL. Example: https://bytebase.example.com'
-    required: true
   bb-token:
     description: 'The Bytebase access token'
-    required: true
-  bb-project:
-    description: 'The Bytebase project ID'
-    required: true
-  bb-database:
-    description:
-      'The Bytebase database. Example: "instances/dbdbdb/databases/db_1"'
-    required: true
-  dir:
-    description:
-      'The directory where this action creates release from. Example:
-      `bytebase/migrations`'
     required: true
   gh-token:
     description: 'The github access token'

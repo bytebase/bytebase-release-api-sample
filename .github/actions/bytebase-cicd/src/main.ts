@@ -32,9 +32,6 @@ export async function run(): Promise<void> {
     const commitUrl = pushPayload.head_commit?.url ?? ''
 
     const bbToken = core.getInput('bb-token', { required: true })
-    const bbUrl = core.getInput('bb-url', { required: true })
-    const bbProject = core.getInput('bb-project', { required: true })
-    const bbDatabase = core.getInput('bb-database', { required: true })
     const ghToken = core.getInput('gh-token', { required: true })
 
     const branchPrefix = 'refs/heads/'
@@ -47,7 +44,8 @@ export async function run(): Promise<void> {
 
     const configContent = await fs.readFile('./.bb.json', { encoding: 'utf8' })
     const config = JSON.parse(configContent) as {
-      config: {
+      url: string
+      branchConfig: {
         branch: string
         project: string
         database: string
@@ -55,23 +53,20 @@ export async function run(): Promise<void> {
       }[]
     }
 
-    const branchConfig = config.config.find(v => v.branch === branch)
+    const branchConfig = config.branchConfig.find(v => v.branch === branch)
     if (!branchConfig) {
       throw new Error(
         `matching branch ${branch} not found from ${configContent}`
       )
     }
-
-    core.info(JSON.stringify(pushPayload))
-    core.info(configContent)
-    core.info(JSON.stringify(branchConfig))
+    const bbUrl = config.url
 
     ctx = () => {
       return {
         bbUrl: bbUrl,
         bbToken: bbToken,
-        bbProject: bbProject,
-        bbDatabase: bbDatabase,
+        bbProject: branchConfig.project,
+        bbDatabase: branchConfig.database,
         commit: commit,
         commitUrl: commitUrl,
         c: new hc.HttpClient('bytebase-cicd-action', [], {
@@ -82,7 +77,7 @@ export async function run(): Promise<void> {
       }
     }
 
-    const dir = core.getInput('dir', { required: true })
+    const dir = branchConfig.dir
     const globPattern = path.join('./', dir, '*.sql')
 
     const versionReg = /^\d+/
