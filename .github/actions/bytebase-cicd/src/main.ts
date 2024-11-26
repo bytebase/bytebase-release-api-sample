@@ -37,6 +37,14 @@ export async function run(): Promise<void> {
     const bbDatabase = core.getInput('bb-database', { required: true })
     const ghToken = core.getInput('gh-token', { required: true })
 
+    const branchPrefix = 'refs/heads/'
+    if (!pushPayload.ref.startsWith(branchPrefix)) {
+      throw new Error(
+        `expect ref to start with ${branchPrefix}, but ref is ${pushPayload.ref}`
+      )
+    }
+    const branch = pushPayload.ref.slice(branchPrefix.length)
+
     const configContent = await fs.readFile('./.bb.json', { encoding: 'utf8' })
     const config = JSON.parse(configContent) as {
       config: {
@@ -47,8 +55,16 @@ export async function run(): Promise<void> {
       }[]
     }
 
+    const branchConfig = config.config.find(v => v.branch === branch)
+    if (!branchConfig) {
+      throw new Error(
+        `matching branch ${branch} not found from ${configContent}`
+      )
+    }
+
     core.info(JSON.stringify(pushPayload))
     core.info(configContent)
+    core.info(JSON.stringify(branchConfig))
 
     ctx = () => {
       return {
