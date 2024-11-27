@@ -32641,7 +32641,8 @@ async function run() {
             return acc + step.specs.length;
         }, 0);
         if (s === 0) {
-            throw new Error('plan has no specs');
+            core.warning('plan has no specs');
+            return;
         }
         const plan = await (0, bb_1.createPlan)(pPlan);
         const rollout = await (0, bb_1.createRollout)({ plan: plan.name });

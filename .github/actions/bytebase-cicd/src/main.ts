@@ -113,7 +113,8 @@ export async function run(): Promise<void> {
       return acc + step.specs.length
     }, 0)
     if (s === 0) {
-      throw new Error('plan has no specs')
+      core.warning('plan has no specs')
+      return
     }
 
     const plan = await createPlan(pPlan)
