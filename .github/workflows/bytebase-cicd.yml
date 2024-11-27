@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+      - dev
+      - staging
+      - hotfix
   pull_request:
     types:
       - closed
